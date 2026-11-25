@@ -2,7 +2,7 @@
    Data: localStorage key sms_db_v1. No server, no real backend.
    Demo passwords only — never use for production. See README.md + docs/BACKEND.md */
 'use strict';
-const DB_KEY='sms_db_v1', SES_KEY='sms_session_v1';
+const DB_KEY='sms_db_v2', SES_KEY='sms_session_v1';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PKR=n=>'PKR '+Number(n||0).toLocaleString('en-PK');
@@ -41,10 +41,12 @@ function seed(){
  const first=['Ahmed','Sara','Ali','Zainab','Hassan','Amina','Usman','Fatima','Bilal','Maryam','Omar','Hiba','Danish','Noor','Hamza','Iqra','Yusuf','Mahnoor','Arslan','Khadija','Saad','Ayesha','Talha','Rania'];
  const last=['Ali','Khan','Ahmed','Hussain','Malik','Raza','Shah','Butt','Chaudhry','Iqbal','Nawaz','Siddiqui','Qureshi','Anwar'];
  const students=first.map((f,i)=>{
-   const cls=classes[i%8]; const parentIdx=Math.floor(i/2);
+   const cls=classes[i%8]; const parentIdx=Math.floor(i/2); const parName=['Bilal Ahmed','Shahid Khan','Nadeem Hussain','Imran Malik','Asif Raza','Khalid Shah','Tariq Butt','Farhan Chaudhry','Waqas Iqbal','Salman Nawaz','Javed Siddiqui','Rashid Qureshi'][parentIdx];
    return {id:'S'+String(i+1).padStart(2,'0'),admissionNo:'AN-2026-'+String(100+i),name:f+' '+last[i%last.length],classId:cls.id,roll:i%6+1,
    gender:i%2?'Female':'Male',dob:'201'+(i%9)+'-0'+(i%8+1)+'-1'+(i%9),blood:['A+','B+','O+','AB+'][i%4],phone:'03'+String(10+i)+'-55501'+String(i).padStart(2,'0'),
-   address:(i+12)+' Street, Model Town, Lahore',parentId:'P'+String(parentIdx+1).padStart(2,'0'),status:'Active',admissionDate:'2026-04-0'+(i%8+1),medical:i===3?'Asthma — inhaler in school bag':''};});
+   address:(i+12)+' Street, Model Town, Lahore',city:'Lahore',nationality:'Pakistani',parentId:'P'+String(parentIdx+1).padStart(2,'0'),
+   guardianName:parName,emergencyContact:'0300-77700'+String(parentIdx+11),prevSchool:['Little Angels Montessori','The Educators Junior Campus','Beaconhouse Junior','City School Junior'][i%4],
+   documents:['Birth Certificate','B-Form','Previous Report Card'],photo:'',status:'Active',admissionDate:'2026-04-0'+(i%8+1),medical:i===3?'Asthma — inhaler in school bag':''};});
  const parents=Array.from({length:12},(_,i)=>({id:'P'+String(i+1).padStart(2,'0'),name:['Bilal Ahmed','Shahid Khan','Nadeem Hussain','Imran Malik','Asif Raza','Khalid Shah','Tariq Butt','Farhan Chaudhry','Waqas Iqbal','Salman Nawaz','Javed Siddiqui','Rashid Qureshi'][i],email:'parent'+(i+1)+'@mail.pk',phone:'0300-77700'+String(i+10),relation:i%3===0?'Mother':'Father',children:students.filter(s=>s.parentId==='P'+String(i+1).padStart(2,'0')).map(s=>s.id)}));
  parents[0].name='Bilal Ahmed'; parents[0].email='bilal@school.pk';
  const staff=[
@@ -54,12 +56,19 @@ function seed(){
   {id:'ST04',name:'Shazia Bibi',role:'School Nurse',dept:'Health',phone:'0324-4005566',salary:60000,status:'Active'},
   {id:'ST05',name:'Imran Yousuf',role:'Receptionist',dept:'Admin',phone:'0325-5006677',salary:48000,status:'Active'}];
  // attendance: last 5 school days, mostly present
- const attendance=[]; const dates=[]; {const d=new Date(); let n=0; while(dates.length<5){ if(d.getDay()!==0&&d.getDay()!==6){dates.unshift(d.toISOString().slice(0,10));} d.setDate(d.getDate()-1); n++; if(n>14)break; }}
+ const attendance=[]; const dates=[]; {const d=new Date(); let n=0; while(dates.length<20){ if(d.getDay()!==0&&d.getDay()!==6){dates.unshift(d.toISOString().slice(0,10));} d.setDate(d.getDate()-1); n++; if(n>40)break; }}
  students.forEach((s,i)=>dates.forEach((dt,di)=>{ const r=(i*7+di*3)%17; attendance.push({date:dt,studentId:s.id,classId:s.classId,status:r===0?'Absent':r===1?'Late':r===2?'Leave':'Present'}); }));
  const timetable=[]; const slots=[['08:00','Mathematics','T01'],['08:45','English','T02'],['09:30','Science','T03'],['10:15','Urdu','T04'],['11:00','Islamiyat','T05'],['11:45','Computer Science','T06']];
  classes.forEach(c=>DAYS.forEach((day,di)=>slots.forEach((sl,pi)=>{ if((di+pi)%7===6) return; timetable.push({classId:c.id,day,period:pi+1,time:sl[0],subject:sl[1],teacherId:sl[2],room:c.room}); })));
- const exams=[{id:'EX01',name:'Midterm Examination 2026',term:'Term 1',start:'2026-10-12',end:'2026-10-20',status:'Published'}];
- const marks=[]; students.forEach((s,i)=>['Mathematics','English','Science','Urdu'].forEach((sub,si)=>{ marks.push({examId:'EX01',studentId:s.id,subject:sub,obtained:62+((i*13+si*7)%36),total:100}); }));
+ const exams=[
+  {id:'EX01',name:'Midterm Examination 2026',category:'Midterm Exam',term:'Term 1',start:'2026-10-12',end:'2026-10-20',status:'Published'},
+  {id:'EX02',name:'Weekly Test — Week 3 (Maths)',category:'Weekly Test',term:'Term 1',start:'2026-11-03',end:'2026-11-03',status:'Published'},
+  {id:'EX03',name:'Monthly Test — November 2026',category:'Monthly Test',term:'Term 1',start:'2026-11-10',end:'2026-11-12',status:'Published'},
+  {id:'EX04',name:'Quiz — English Vocabulary',category:'Quiz',term:'Term 1',start:'2026-11-06',end:'2026-11-06',status:'Published'}];
+ const marks=[]; students.forEach((s,i)=>{ ['Mathematics','English','Science','Urdu'].forEach((sub,si)=>{ marks.push({examId:'EX01',studentId:s.id,subject:sub,obtained:62+((i*13+si*7)%36),total:100}); });
+  marks.push({examId:'EX02',studentId:s.id,subject:'Mathematics',obtained:6+((i*5)%4),total:10});
+  ['Mathematics','English','Science','Urdu'].forEach((sub,si)=>{ marks.push({examId:'EX03',studentId:s.id,subject:sub,obtained:60+((i*11+si*5)%38),total:100}); });
+  marks.push({examId:'EX04',studentId:s.id,subject:'English',obtained:7+((i*3)%3),total:10}); });
  const fees=[]; students.forEach((s,i)=>{ const amt=8000+(i%3)*1500; const paid=i%4!==0; fees.push({id:'INV-'+(2000+i),studentId:s.id,month:'November 2026',amount:amt,paid:paid?amt:0,due:'2026-11-10',discount:i%5===0?1000:0,status:paid?'Paid':(i%4===1?'Overdue':'Pending')}); });
  const payments=fees.filter(f=>f.paid>0).slice(0,14).map((f,i)=>({receipt:'RCP-2026-'+String(1001+i),invoiceId:f.id,studentId:f.studentId,amount:f.paid,date:'2026-11-0'+(i%7+1),method:['Cash','Bank Transfer','JazzCash'][i%3],receivedBy:'Nadia Hussain'}));
  const homework=[
@@ -90,9 +99,11 @@ function seed(){
    {id:'AD04',name:'Bilal Hussain',cls:'KG',status:'Approved',date:'2026-11-15',phone:'0309-4445566',guardian:'Hussain Ali'},
    {id:'AD05',name:'Areeba Khan',cls:'Class 2',status:'Inquiry',date:'2026-11-19',phone:'0309-5556677',guardian:'Khan Muhammad'}],
   announcements:[
-   {id:'AN01',title:'Midterm results published',body:'Midterm Examination 2026 results are now available in the Student and Parent portals.',date:'2026-11-20',audience:'All',pinned:true},
-   {id:'AN02',title:'Parent–Teacher Meeting — 28 November',body:'All parents are invited to meet class teachers between 9:00 AM and 1:00 PM.',date:'2026-11-18',audience:'Parents',pinned:true},
-   {id:'AN03',title:'Sports Day — 5 December',body:'Annual Sports Day will be held at the school ground. Students should wear their sports uniform.',date:'2026-11-15',audience:'All',pinned:false}],
+   {id:'AN01',title:'Midterm results published',body:'Midterm Examination 2026 results are now available in the Student and Parent portals.',date:'2026-11-20',audience:'All',classId:null,pinned:true},
+   {id:'AN02',title:'Parent–Teacher Meeting — 28 November',body:'All parents are invited to meet class teachers between 9:00 AM and 1:00 PM.',date:'2026-11-18',audience:'Parents',classId:null,pinned:true},
+   {id:'AN03',title:'Sports Day — 5 December',body:'Annual Sports Day will be held at the school ground. Students should wear their sports uniform.',date:'2026-11-15',audience:'All',classId:null,pinned:false},
+   {id:'AN04',title:'Class 5-A: Maths Weekly Test on Tuesday',body:'Class 5-A will have a Maths weekly test on Tuesday. Please revise fractions (Exercise 5.2).',date:'2026-11-21',audience:'Class 5-A',classId:'C5A',pinned:false,by:'Ayesha Khan'}],
+  resultSheets:[],
   messages:[
    {id:'M01',from:'Ayesha Khan',to:'Bilal Ahmed',subject:'Ahmed — excellent in Maths',body:'Ahmed scored 92 in the Midterm Maths paper. Please encourage him to keep it up.',date:'2026-11-20',read:false,role:'teacher'},
    {id:'M02',from:'Admin',to:'All Teachers',subject:'Staff meeting on Monday',body:'Staff meeting at 8:00 AM in the staff room to discuss the annual function.',date:'2026-11-19',read:true,role:'admin'}],
@@ -127,7 +138,35 @@ function seed(){
  };
 }
 let DB=load();
-function load(){ try{const r=localStorage.getItem(DB_KEY); if(r) return JSON.parse(r);}catch(e){} const s=seed(); try{localStorage.setItem(DB_KEY,JSON.stringify(s));}catch(e){} return s; }
+function migrate(d){
+  if(!d||typeof d!=='object') return seed();
+  d.resultSheets=d.resultSheets||[];
+  // enrich students with the full profile fields the school collected
+  (d.students||[]).forEach((st,i)=>{ const par=(d.parents||[]).find(pp=>pp.id===st.parentId);
+    if(st.guardianName===undefined) st.guardianName=par?par.name:'';
+    if(st.nationality===undefined) st.nationality='Pakistani';
+    if(st.city===undefined) st.city='Lahore';
+    if(st.emergencyContact===undefined) st.emergencyContact=par?par.phone:'';
+    if(st.prevSchool===undefined) st.prevSchool=['Little Angels Montessori','The Educators Junior Campus','Beaconhouse Junior','City School Junior'][i%4];
+    if(st.documents===undefined) st.documents=['Birth Certificate','B-Form','Previous Report Card'];
+    if(st.photo===undefined) st.photo=''; });
+  // add Weekly / Monthly / Quiz exams + marks if an old seed lacks them
+  const hasCat=(d.exams||[]).some(e=>e.category==='Weekly Test');
+  if(!hasCat){
+    (d.exams=d.exams||[]).push(
+      {id:'EX02',name:'Weekly Test — Week 3 (Maths)',category:'Weekly Test',term:'Term 1',start:'2026-11-03',end:'2026-11-03',status:'Published'},
+      {id:'EX03',name:'Monthly Test — November 2026',category:'Monthly Test',term:'Term 1',start:'2026-11-10',end:'2026-11-12',status:'Published'},
+      {id:'EX04',name:'Quiz — English Vocabulary',category:'Quiz',term:'Term 1',start:'2026-11-06',end:'2026-11-06',status:'Published'});
+    (d.students||[]).forEach((st,i)=>{ d.marks.push({examId:'EX02',studentId:st.id,subject:'Mathematics',obtained:6+((i*5)%4),total:10});
+      ['Mathematics','English','Science','Urdu'].forEach((sub,si)=>d.marks.push({examId:'EX03',studentId:st.id,subject:sub,obtained:60+((i*11+si*5)%38),total:100}));
+      d.marks.push({examId:'EX04',studentId:st.id,subject:'English',obtained:7+((i*3)%3),total:10}); });
+    (d.announcements||[]).forEach(a=>{ if(a.classId===undefined) a.classId=null; });
+  }
+  return d;
+}
+function load(){ try{const r=localStorage.getItem(DB_KEY); if(r) return migrate(JSON.parse(r));}catch(e){}
+  try{const old=localStorage.getItem('sms_db_v1'); if(old){ const d=migrate(JSON.parse(old)); try{localStorage.setItem(DB_KEY,JSON.stringify(d));}catch(e){} return d; }}catch(e){}
+  const s=seed(); try{localStorage.setItem(DB_KEY,JSON.stringify(s));}catch(e){} return s; }
 function save(){ try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){ toast('Could not save — browser storage is full or blocked.','err'); } }
 function resetDemo(){ if(confirm('Reset all demo data? Your changes will be lost.')){ localStorage.removeItem(DB_KEY); DB=seed(); save(); location.reload(); } }
 function audit(action){ DB.audit.unshift({id:uid('A'),action,by:currentUser()?.name||'System',date:new Date().toLocaleString('en-GB')}); save(); }
@@ -135,18 +174,24 @@ function audit(action){ DB.audit.unshift({id:uid('A'),action,by:currentUser()?.n
 /* ---------------- session / helpers ---------------- */
 function currentUser(){ try{const s=JSON.parse(localStorage.getItem(SES_KEY)||'null'); return s?DB.users.find(u=>u.id===s.id)||null:null;}catch(e){return null;} }
 function login(email,pw,remember){ const u=DB.users.find(x=>x.email.toLowerCase()===String(email).toLowerCase().trim()&&x.password===pw); if(!u) return null; localStorage.setItem(SES_KEY,JSON.stringify({id:u.id,remember:!!remember})); audit(u.name+' logged in'); return u; }
-function logout(){ localStorage.removeItem(SES_KEY); route='dashboard'; routeParam=null; render(); }
+function logout(){ localStorage.removeItem(SES_KEY); route='dashboard'; routeParam=null; childSel=null; selectedPortal=null; render(); }
 function studentById(id){return DB.students.find(s=>s.id===id);}
 function classById(id){return DB.classes.find(c=>c.id===id);}
 function teacherById(id){return DB.teachers.find(t=>t.id===id);}
 function parentById(id){return DB.parents.find(p=>p.id===id);}
 function classLabel(id){const c=classById(id); return c?c.name+'-'+c.section:'—';}
-function myStudents(){ const u=currentUser(); if(!u) return []; if(u.role==='parent'){const p=parentById(u.parentId); return (p?p.children:[]).map(studentById).filter(Boolean);} if(u.role==='student') return [studentById(u.studentId)].filter(Boolean); return DB.students; }
+function myStudents(){ const u=currentUser(); if(!u) return []; if(u.role==='parent'){const p=parentById(u.parentId); return (p?p.children:[]).map(studentById).filter(Boolean);} if(u.role==='student') return [studentById(u.studentId)].filter(Boolean); if(u.role==='teacher'){ const t=teacherById(u.teacherId); return DB.students.filter(s=>t&&t.classes.includes(s.classId)); } return DB.students; }
 function myClasses(){ const u=currentUser(); if(u.role==='teacher'){const t=teacherById(u.teacherId); return DB.classes.filter(c=>t&&t.classes.includes(c.id));} if(u.role==='student'){const s=studentById(u.studentId); return s?[classById(s.classId)]:[];} if(u.role==='parent'){return myStudents().map(s=>classById(s.classId)).filter(Boolean);} return DB.classes; }
 function attPct(sid){ const rows=DB.attendance.filter(a=>a.studentId===sid); if(!rows.length) return 100; const p=rows.filter(a=>a.status==='Present'||a.status==='Late').length; return Math.round(p/rows.length*100); }
+const EXAM_CATS=['Weekly Test','Monthly Test','Midterm Exam','Final Exam','Quiz'];
+const examById=id=>DB.exams.find(e=>e.id===id);
+const examCatOf=examId=>{ const e=examById(examId); return e?e.category:'—'; };
+function studentAvg(sid,cat){ let m=DB.marks.filter(x=>x.studentId===sid); if(cat&&cat!=='All') m=m.filter(x=>examCatOf(x.examId)===cat); if(!m.length) return null; return Math.round(m.reduce((a,x)=>a+x.obtained/x.total*100,0)/m.length); }
+function attMonthly(sid){ const map={}; DB.attendance.filter(a=>a.studentId===sid).forEach(a=>{ const k=a.date.slice(0,7); map[k]=map[k]||{month:k,present:0,absent:0,late:0,leave:0,total:0}; map[k].total++; if(a.status==='Present')map[k].present++; else if(a.status==='Absent')map[k].absent++; else if(a.status==='Late')map[k].late++; else map[k].leave++; }); return Object.values(map).sort((a,b)=>b.month.localeCompare(a.month)).map(m=>({...m,pct:m.total?Math.round((m.present+m.late)/m.total*100):100})); }
+function announcementsFor(u){ if(!u) return DB.announcements; if(u.role==='admin') return DB.announcements; if(u.role==='teacher'){ const cls=myClasses().map(c=>c.id); return DB.announcements.filter(a=>a.audience==='All'||a.audience==='Teachers'||(a.classId&&cls.includes(a.classId))); } if(u.role==='student'){ const s=studentById(u.studentId); return DB.announcements.filter(a=>a.audience==='All'||a.audience==='Students'||(s&&a.classId===s.classId)); } if(u.role==='parent'){ const kids=myStudents(); const cls=kids.map(k=>k.classId); return DB.announcements.filter(a=>a.audience==='All'||a.audience==='Parents'||(a.classId&&cls.includes(a.classId))); } return DB.announcements; }
+const lockNote=msg=>`<div class="lock-note">🔒 ${esc(msg)}</div>`;
 function studentFees(sid){ return DB.fees.filter(f=>f.studentId===sid); }
 function feeBalance(sid){ return studentFees(sid).reduce((a,f)=>a+(f.amount-f.paid-(f.discount||0)),0); }
-function studentAvg(sid){ const m=DB.marks.filter(x=>x.studentId===sid); if(!m.length) return null; return Math.round(m.reduce((a,x)=>a+x.obtained/x.total*100,0)/m.length); }
 function toast(msg,type){ const t=document.createElement('div'); t.className='toast '+(type||'ok'); t.textContent=msg; $('#toast-root').appendChild(t); setTimeout(()=>t.remove(),3600); }
 function confirmDlg(msg,onYes){ openModal('Please confirm',`<p>${esc(msg)}</p>`,[{label:'Cancel',cls:'btn-ghost'},{label:'Yes, continue',cls:'btn-primary',fn:onYes}]); }
 function openModal(title,bodyHtml,actions){ const r=$('#modal-root'); r.innerHTML=`<div class="modal-back" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true"><h2>${esc(title)}</h2><div style="margin-top:10px">${bodyHtml}</div><div class="actions"></div></div></div>`; const box=r.querySelector('.actions'); (actions||[{label:'Close',cls:'btn-primary'}]).forEach(a=>{ const b=document.createElement('button'); b.className='btn '+(a.cls||'btn-ghost'); b.textContent=a.label; b.onclick=()=>{ const r=a.fn?a.fn():undefined; if(r!==false) closeModal(); }; box.appendChild(b); }); }
@@ -162,35 +207,62 @@ function setLang(l){ LANG=l; localStorage.setItem('sms_lang',l); document.docume
 function toggleTheme(){ document.body.classList.toggle('dark'); localStorage.setItem('sms_theme',document.body.classList.contains('dark')?'dark':'light'); }
 
 /* ---------------- login ---------------- */
+const PORTALS=[
+ {role:'admin',icon:'\u{1F469}\u200D\u{1F4BC}',title:'Admin',desc:'Full control — students, fees, staff, reports and settings.',email:'admin@school.pk',pw:'admin123',hint:'School Administrator'},
+ {role:'teacher',icon:'\u{1F469}\u200D\u{1F3EB}',title:'Teacher',desc:'Your sections only — attendance, marks, homework and announcements.',email:'ayesha@school.pk',pw:'teacher123',hint:'Ayesha Khan — Class 5-A, Mathematics'},
+ {role:'student',icon:'\u{1F468}\u200D\u{1F393}',title:'Student',desc:'Your profile, fees, attendance, results and timetable.',email:'ahmed@school.pk',pw:'student123',hint:'Ahmed Ali — Class 5-A, Roll 1'},
+ {role:'parent',icon:'\u{1F468}\u200D\u{1F469}\u200D\u{1F467}',title:'Parent',desc:'Your children — fees, attendance and exam performance.',email:'bilal@school.pk',pw:'parent123',hint:'Bilal Ahmed — father of Ahmed & Sara'}];
+function selectPortal(role){ selectedPortal=role; renderLogin(); }
 function renderLogin(err){
- const demo=[['admin@school.pk','admin123','👩‍💼','Admin Portal','Full control — students, fees, staff, reports.'],['ayesha@school.pk','teacher123','👩‍🏫','Teacher Portal','Ayesha Khan — Class 5-A, Mathematics.'],['ahmed@school.pk','student123','🧑‍🎓','Student Portal','Ahmed Ali — Class 5-A, Roll 1.'],['bilal@school.pk','parent123','👨‍👩‍👧','Parent Portal','Bilal Ahmed — father of Ahmed & Sara.']];
- $('#app').innerHTML=`<div class="login-wrap"><div class="login-card">
-  <div class="login-hero"><span class="badge">🏫 Al-Noor Public School • Lahore</span>
-   <h1>School Management System</h1><p>One platform for the whole school — admin, teachers, students and parents. Demo data is stored only in your browser.</p>
-   <div class="portal-list">${demo.map(d=>`<div class="portal-item"><span class="pi">${d[2]}</span><div><b>${d[3]}</b><span>${d[4]}</span></div></div>`).join('')}</div>
-   <p style="margin-top:auto;font-size:.85rem">🇵🇰 PKR • English / اردو • Classes Playgroup – 10 • Matric &amp; Intermediate ready</p></div>
-  <form class="login-form" id="login-form"><h2>Sign in</h2><p class="muted">Use a demo account below, or sign in with email and password.</p>
+ const hero=`<div class="login-hero"><span class="badge">\u{1F3EB} Al-Noor Public School \u2022 Lahore</span>
+  <h1>School Management System</h1><p>One platform for the whole school — admin, teachers, students and parents. Demo data is stored only in your browser.</p>
+  <p style="margin-top:auto;font-size:.85rem">\u{1F1F5}\u{1F1F0} PKR \u2022 English / \u{0627}\u{0631}\u{062F}\u{0648} \u2022 Classes Playgroup \u2013 10 \u2022 Matric &amp; Intermediate ready</p></div>`;
+ if(!selectedPortal){
+  $('#app').innerHTML=`<div class="login-wrap"><div class="login-card">${hero}
+  <div class="login-form"><h2>Choose your portal</h2><p class="muted">Tap your portal, then sign in with your email and password. Each portal shows only what that role is allowed to see.</p>
+   ${err?`<div class="error-box">${esc(err)}</div>`:''}
+   <div class="portal-cards">${PORTALS.map(d=>`<button type="button" class="portal-card" onclick="selectPortal('${d.role}')"><span class="pc-ic">${d.icon}</span><b>${d.title} Portal</b><span>${d.desc}</span><span class="pc-go">Sign in \u2192</span></button>`).join('')}</div>
+   <p class="hint" style="margin-top:16px">SMS, WhatsApp, email and payment gateways are integration-ready only — they need configuration and are never faked. See README.md.</p>
+  </div></div></div>`;
+  return;
+ }
+ const d=PORTALS.find(x=>x.role===selectedPortal);
+ $('#app').innerHTML=`<div class="login-wrap"><div class="login-card">${hero}
+  <form class="login-form" id="login-form"><button type="button" class="btn btn-ghost btn-sm" onclick="selectedPortal=null;renderLogin()">\u2190 All portals</button>
+   <h2 style="margin-top:14px"><span style="font-size:1.4rem">${d.icon}</span> ${d.title} Portal — Sign in</h2><p class="muted">${d.desc}</p>
    ${err?`<div class="error-box">${esc(err)}</div>`:''}
    <div class="field"><label for="email">Email</label><input id="email" type="email" required placeholder="you@school.pk" autocomplete="username"></div>
-   <div class="field"><label for="pwd">Password</label><input id="pwd" type="password" required placeholder="••••••••" autocomplete="current-password"></div>
-   <div class="field" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="rem" style="width:auto"><label for="rem" style="margin:0;font-weight:400">Remember me</label><a href="#" style="margin-left:auto" onclick="event.preventDefault();toast('Demo only: use a demo account below. Password reset needs email configured — see README.','err')">Forgot password?</a></div>
-   <button class="btn btn-primary btn-block" type="submit">Sign in →</button>
-   <h3 style="margin:20px 0 4px">One-click demo login</h3><p class="hint">Development only — these accounts are for testing, not production.</p>
-   <div class="demo-grid">${demo.map(d=>`<button type="button" class="demo-card" onclick="demoLogin('${d[0]}','${d[1]}')"><b>${d[2]} ${d[3]}</b><span>${d[4].split('—')[0]}</span><br><code>${d[0]} / ${d[1]}</code></button>`).join('')}</div>
-   <p class="hint" style="margin-top:16px">SMS, WhatsApp, email and payment gateways are integration-ready only — they need configuration and are never faked. See README.md.</p>
+   <div class="field"><label for="pwd">Password</label><input id="pwd" type="password" required placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password">
+    <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:400"><input type="checkbox" style="width:auto" onchange="document.getElementById('pwd').type=this.checked?'text':'password'"> Show password</label></div>
+   <div class="field" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="rem" style="width:auto"><label for="rem" style="margin:0;font-weight:400">Remember me</label><a href="#" style="margin-left:auto" onclick="event.preventDefault();forgotPassword()">Forgot password?</a></div>
+   <button class="btn btn-primary btn-block" type="submit">Sign in to ${d.title} Portal \u2192</button>
+   <h3 style="margin:20px 0 4px">Demo login — ${d.title}</h3><p class="hint">Development only — for testing, not production.</p>
+   <button type="button" class="demo-card" style="width:100%" onclick="demoLogin('${d.email}','${d.pw}')"><b>${d.icon} ${d.title} — ${d.hint}</b><br><code>${d.email} / ${d.pw}</code></button>
+   <p class="hint" style="margin-top:16px">Signed in as ${d.title} you stay in that portal only. To switch portals, log out first.</p>
   </form></div></div>`;
- $('#login-form').onsubmit=e=>{ e.preventDefault(); const u=login($('#email').value,$('#pwd').value,$('#rem').checked); if(!u){ renderLogin('Incorrect email or password. Try a demo account below.'); return; } route='dashboard'; routeParam=null; render(); };
+ $('#login-form').onsubmit=e=>{ e.preventDefault(); const em=$('#email').value, pw=$('#pwd').value;
+  const u=DB.users.find(x=>x.email.toLowerCase()===em.toLowerCase().trim());
+  if(!u||u.password!==pw){ renderLogin('Incorrect email or password. Try the demo login below.'); return; }
+  if(u.role!==selectedPortal){ renderLogin('This account is not a '+d.title+' account. Please choose the '+u.role+' portal instead.'); return; }
+  login(em,pw,$('#rem').checked); route='dashboard'; routeParam=null; render(); };
 }
-function demoLogin(e,p){ const u=login(e,p,true); if(u){ route='dashboard'; routeParam=null; toast('Welcome, '+u.name+' 👋'); render(); } else renderLogin('Demo login failed.'); }
+function forgotPassword(){ const d=PORTALS.find(x=>x.role===selectedPortal)||PORTALS[0];
+ openModal('Forgot password',`<p>This is a <b>demo</b>: password reset needs email configured, which is not set up here — so no reset email can be sent.</p><p>Use the <b>demo login button</b> below the sign-in form for the ${esc(d.title)} portal (<code>${esc(d.email)} / ${esc(d.pw)}</code>).</p><p class="hint">In the production system, a reset link would be emailed to you. See docs/BACKEND.md.</p>`,[{label:'Got it',cls:'btn-primary'}]); }
+function demoLogin(e,p){ const u=login(e,p,true); if(u){ route='dashboard'; routeParam=null; toast('Welcome, '+u.name+' \u{1F44B}'); render(); } else renderLogin('Demo login failed.'); }
 
 /* ---------------- shell / navigation ---------------- */
 const NAV={
  admin:[['sec','School'],['dashboard','📊','Dashboard'],['students','🧑‍🎓','Students'],['admissions','📝','Admissions'],['teachers','👩‍🏫','Teachers'],['staff','💼','Staff & HR'],['academics','🏫','Academics'],['attendance','✅','Attendance'],['timetable','🗓️','Timetable'],['exams','📋','Examinations'],['fees','💰','Fees & Finance'],['accounting','📒','Accounting'],['homework','📚','Homework'],['assignments','📄','Assignments'],['library','📖','Library'],['transport','🚌','Transport'],['communication','💬','Communication'],['events','🎉','Events & Calendar'],['discipline','⚖️','Discipline'],['health','🩺','Health'],['inventory','📦','Inventory'],['canteen','🍽️','Canteen'],['reports','📈','Reports & Analytics'],['users','🔐','Users & Permissions'],['settings','⚙️','Settings']],
- teacher:[['sec','Teacher'],['dashboard','📊','Dashboard'],['classes','🏫','My Classes'],['attendance','✅','Attendance'],['timetable','🗓️','Timetable'],['homework','📚','Homework'],['assignments','📄','Assignments'],['exams','📋','Exams & Marks'],['progress','📈','Student Progress'],['messages','💬','Messages'],['leave','🌿','Leave'],['profile','👤','Profile']],
+ teacher:[['sec','Teacher'],['dashboard','📊','Dashboard'],['classes','🏫','My Classes'],['attendance','✅','Attendance'],['timetable','🗓️','Timetable'],['homework','📚','Homework'],['assignments','📄','Assignments'],['exams','📋','Exams & Marks'],['progress','📈','Student Progress'],['announcements','📢','Announcements'],['messages','💬','Messages'],['leave','🌿','Leave'],['profile','👤','Profile']],
  student:[['sec','Student'],['dashboard','📊','Dashboard'],['profile','👤','My Profile'],['attendance','✅','Attendance'],['timetable','🗓️','Timetable'],['homework','📚','Homework'],['assignments','📄','Assignments'],['exams','📋','Exams & Results'],['fees','💰','Fees'],['library','📖','Library'],['events','🎉','Events'],['messages','💬','Messages'],['documents','🪪','Documents']],
  parent:[['sec','Parent'],['dashboard','📊','Dashboard'],['children','👨‍👩‍👧','My Children'],['attendance','✅','Attendance'],['progress','📈','Academic Progress'],['homework','📚','Homework & Assignments'],['fees','💰','Fees & Payments'],['timetable','🗓️','Timetable'],['messages','💬','Messages'],['meetings','🤝','Parent Meetings'],['transport','🚌','Transport'],['events','🎉','Events'],['documents','🪪','Documents'],['profile','👤','Profile']]};
-let route='dashboard', routeParam=null, childSel=null;
-function go(r,p){ route=r; routeParam=p||null; $('.sidebar')?.classList.remove('open'); render(); document.documentElement.scrollTop=0; document.body.scrollTop=0; }
+let route='dashboard', routeParam=null, childSel=null, selectedPortal=null;
+const ALLOWED={admin:null,
+ teacher:['dashboard','classes','attendance','timetable','homework','assignments','exams','progress','messages','leave','profile','announcements','library','events'],
+ student:['dashboard','profile','attendance','timetable','homework','assignments','exams','fees','library','events','messages','documents'],
+ parent:['dashboard','children','attendance','progress','homework','fees','timetable','messages','meetings','transport','events','documents','profile']};
+function routeAllowed(u,r){ const a=u?ALLOWED[u.role]:null; return !a||a.includes(r); }
+function go(r,p){ const u=currentUser(); if(u&&!routeAllowed(u,r)){ toast('Your portal does not have access to that page.','err'); route='dashboard'; routeParam=null; render(); return; } route=r; routeParam=p||null; $('.sidebar')?.classList.remove('open'); render(); document.documentElement.scrollTop=0; document.body.scrollTop=0; }
 function statCard(ic,cls,num,label,sub){ return `<div class="card lift stat"><div class="ic ${cls}">${ic}</div><div><div class="num">${num}</div><div class="lbl">${label}</div>${sub?`<div class="sub">${sub}</div>`:''}</div></div>`; }
 function barRow(label,pct,val,cls){ return `<div class="bar-row"><span>${esc(label)}</span><div class="bar-track"><div class="bar-fill ${cls||''}" style="width:${Math.min(100,Math.max(0,pct))}%"></div></div><span style="text-align:right;font-weight:600">${val}</span></div>`; }
 function pill(txt,cls){ return `<span class="pill ${cls}">${esc(txt)}</span>`; }
@@ -200,6 +272,7 @@ function render(){
  if(localStorage.getItem('sms_theme')==='dark') document.body.classList.add('dark');
  const u=currentUser();
  if(!u){ renderLogin(); return; }
+ if(!routeAllowed(u,route)){ route='dashboard'; routeParam=null; }
  const nav=NAV[u.role]||NAV.admin;
  const title=(nav.find(n=>n[0]===route)||[])[2]||'Dashboard';
  const unread=DB.messages.filter(m=>!m.read).length;
@@ -211,7 +284,7 @@ function render(){
   <div class="main"><header class="topbar">
    <button class="icon-btn menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">☰</button>
    <h1>${esc(title)}</h1>
-   <div class="search-box"><span class="s-ic">🔍</span><input id="global-search" placeholder="${esc(t('search'))}" onkeydown="if(event.key==='Enter'){go('students');setTimeout(()=>{const i=document.getElementById('tbl-q');if(i){i.value=this.value;i.dispatchEvent(new Event('input'));}},50);}"></div>
+   ${(u.role==='admin'||u.role==='teacher')?`<div class="search-box"><span class="s-ic">🔍</span><input id="global-search" placeholder="${esc(t('search'))}" onkeydown="if(event.key==='Enter'){go('students');setTimeout(()=>{const i=document.getElementById('tbl-q');if(i){i.value=this.value;i.dispatchEvent(new Event('input'));}},50);}"></div>`:''}
    <div class="top-actions">
     <button class="icon-btn" title="Notifications" onclick="showNotifications()">🔔${notifs.length?` <span class="pill pill-amber" style="margin-left:2px">${notifs.length}</span>`:''}</button>
     <button class="icon-btn" title="Language: English / اردو" onclick="setLang(LANG==='en'?'ur':'en')">🌐 ${LANG==='en'?'اردو':'EN'}</button>
@@ -238,7 +311,7 @@ function emptyState(icon,msg,btn){ return `<div class="empty"><span class="big">
 /* ---------------- dashboards ---------------- */
 function renderView(u){
  const v=$('#view'); if(!v) return;
- const map={dashboard:()=>viewDashboard(u),students:viewStudents,admissions:viewAdmissions,teachers:viewTeachers,staff:viewStaff,academics:viewAcademics,attendance:()=>viewAttendance(u),timetable:()=>viewTimetable(u),exams:()=>viewExams(u),fees:()=>viewFees(u),accounting:viewAccounting,homework:()=>viewHomework(u),assignments:()=>viewAssignments(u),library:()=>viewLibrary(u),transport:viewTransport,communication:viewCommunication,events:viewEvents,discipline:viewDiscipline,health:viewHealth,inventory:viewInventory,canteen:viewCanteen,reports:viewReports,users:viewUsers,settings:viewSettings,classes:()=>viewMyClasses(u),progress:()=>viewProgress(u),messages:()=>viewMessages(u),leave:viewLeave,profile:()=>viewProfile(u),children:()=>viewChildren(u),meetings:viewMeetings,documents:()=>viewDocuments(u)};
+ const map={dashboard:()=>viewDashboard(u),students:viewStudents,admissions:viewAdmissions,teachers:viewTeachers,staff:viewStaff,academics:viewAcademics,attendance:()=>viewAttendance(u),timetable:()=>viewTimetable(u),exams:()=>viewExams(u),fees:()=>viewFees(u),accounting:viewAccounting,homework:()=>viewHomework(u),assignments:()=>viewAssignments(u),library:()=>viewLibrary(u),transport:viewTransport,communication:viewCommunication,announcements:()=>viewTeacherAnnouncements(currentUser()),events:viewEvents,discipline:viewDiscipline,health:viewHealth,inventory:viewInventory,canteen:viewCanteen,reports:viewReports,users:viewUsers,settings:viewSettings,classes:()=>viewMyClasses(u),progress:()=>viewProgress(u),messages:()=>viewMessages(u),leave:viewLeave,profile:()=>viewProfile(u),children:()=>viewChildren(u),meetings:viewMeetings,documents:()=>viewDocuments(u)};
  (map[route]||(()=>viewDashboard(u)))();
 }
 function viewDashboard(u){
@@ -249,8 +322,12 @@ function viewDashboard(u){
  const collected=DB.payments.reduce((a,p)=>a+p.amount,0);
  const outstanding=DB.fees.reduce((a,f)=>a+(f.amount-f.paid-(f.discount||0)),0);
  const pendingHW=DB.homework.filter(h=>h.status==='Open').length;
+ const qa=u.role==='admin'?`<button class="btn btn-primary" onclick="go('attendance')">✅ Mark attendance</button><button class="btn btn-ghost" onclick="go('fees')">💰 Record payment</button><button class="btn btn-ghost" onclick="go('students')">🔍 Find a student</button>`
+  :u.role==='teacher'?`<button class="btn btn-primary" onclick="go('attendance')">✅ Mark attendance</button><button class="btn btn-ghost" onclick="go('homework')">📚 New homework</button><button class="btn btn-ghost" onclick="go('exams')">📋 Enter marks</button>`
+  :u.role==='student'?`<button class="btn btn-primary" onclick="go('exams')">📋 My results</button><button class="btn btn-ghost" onclick="go('timetable')">🗓️ Timetable</button><button class="btn btn-ghost" onclick="go('homework')">📚 Homework</button>`
+  :`<button class="btn btn-primary" onclick="go('progress')">📈 Child progress</button><button class="btn btn-ghost" onclick="go('fees')">💰 Fees</button><button class="btn btn-ghost" onclick="go('messages')">💬 Messages</button>`;
  const head=`${crumb('Dashboard')}<div class="page-head"><div><h1>${esc(t('welcome'))}, ${esc(u.name.split(' ')[0])} 👋</h1><p>${fmtDate(td)} • ${esc(DB.school.academicYear)} • ${esc(DB.school.name)}, Lahore</p></div>
-  <div class="quick-actions"><button class="btn btn-primary" onclick="go('attendance')">✅ Mark attendance</button><button class="btn btn-ghost" onclick="go('fees')">💰 Record payment</button><button class="btn btn-ghost" onclick="go('students')">🔍 Find a student</button></div></div>`;
+  <div class="quick-actions">${qa}</div></div>`;
  if(u.role==='admin'){
   v.innerHTML=head+`<div class="grid g4">
    ${statCard('🧑‍🎓','ic-blue',DB.students.length,'Total students',DB.classes.length+' classes • '+DB.students.filter(s=>s.status==='Active').length+' active')}
@@ -271,7 +348,8 @@ function viewDashboard(u){
   <section class="card"><h3><span class="ci">⚡</span>Quick actions</h3><div class="quick-actions"><button class="btn btn-primary" onclick="go('attendance')">✅ Mark attendance</button><button class="btn btn-ghost" onclick="go('homework')">📚 New homework</button><button class="btn btn-ghost" onclick="go('exams')">📋 Enter marks</button></div><p class="muted" style="margin-top:12px">Your classes: ${myCls.map(classLabel).join(', ')||'—'}</p></section></div>`;
  } else if(u.role==='student'){
   const s=studentById(u.studentId); const avg=studentAvg(s.id);
-  v.innerHTML=head+`<div class="grid g4">${statCard('✅','ic-green',attPct(s.id)+'%','My attendance','This term, all subjects')}${statCard('📋','ic-purple',avg===null?'—':avg+'%','Midterm average',avg===null?'':GRADE(avg)+' grade')}${statCard('💰','ic-amber',PKR(feeBalance(s.id)),'Fee balance',feeBalance(s.id)===0?'All fees paid 🎉':'Due 10 Nov 2026')}${statCard('📚','ic-blue',DB.homework.filter(h=>h.classId===s.classId).length,'Homework assigned','Check due dates below')}</div>
+  const wAvg=studentAvg(s.id,'Weekly Test'), mAvg=studentAvg(s.id,'Monthly Test');
+  v.innerHTML=head+`<div class="grid g4">${statCard('✅','ic-green',attPct(s.id)+'%','My attendance','This term, all subjects')}${statCard('📋','ic-purple',avg===null?'—':avg+'%','Overall average',avg===null?'':GRADE(avg)+' grade')}${statCard('📝','ic-pink',(wAvg??'—')+'%','Weekly tests',mAvg===null?'':'Monthly tests: '+mAvg+'%')}${statCard('💰','ic-amber',PKR(feeBalance(s.id)),'Fee balance',feeBalance(s.id)===0?'All fees paid 🎉':'Due 10 Nov 2026')}</div>
   <div class="grid g2" style="margin-top:16px"><section class="card"><h3><span class="ci">📚</span>Homework — ${classLabel(s.classId)}</h3>${DB.homework.filter(h=>h.classId===s.classId).map(h=>`<p><b>${esc(h.title)}</b> — ${esc(h.subject)}<br><small>Due ${fmtDate(h.due)} • ${esc(h.desc)}</small></p>`).join('')||emptyState('📚','No homework right now.')}</section>
   <section class="card"><h3><span class="ci">🗓️</span>Today's timetable</h3>${DB.timetable.filter(x=>x.classId===s.classId).slice(0,6).map(x=>`<p><b>${esc(x.time)}</b> — ${esc(x.subject)} • ${esc((teacherById(x.teacherId)||{}).name||'')}</p>`).join('')}</section></div>`;
  } else {
@@ -306,16 +384,18 @@ function viewStudents(){
  v.innerHTML=tableShell('Students','Search, filter, sort and manage every student. Click a name for the full profile.',
   `<input id="tbl-q" placeholder="🔍 Search name, ID, class…"><select id="flt-class" onchange="window.__fc=this.value"><option value="">All classes</option>${DB.classes.map(c=>`<option value="${c.id}">${c.name}-${c.section}</option>`).join('')}</select>`,
   `<th onclick="window.__sort('name')" style="cursor:pointer">Name ↕</th><th>ID</th><th>Class</th><th>Roll</th><th>Parent</th><th>Attendance</th><th>Fees</th><th></th>`,
-  '',`<button class="btn btn-primary" onclick="studentForm()">＋ Add student</button><button class="btn btn-ghost" onclick="exportStudents()">⬇ Export CSV</button>`);
+  '',`${currentUser().role==='admin'?`<button class="btn btn-primary" onclick="studentForm()">＋ Add student</button>`:lockNote('Only admin can add, edit or delete student data.')}<button class="btn btn-ghost" onclick="exportStudents()">⬇ Export CSV</button>`);
  let cls='';
  window.__fc=c=>{ cls=c; window.__applyS&&window.__applyS(); };
- const renderRow=s=>{ const p=parentById(s.parentId); const bal=feeBalance(s.id); return `<tr><td><b>${esc(s.name)}</b><br><small>${esc(s.admissionNo)}</small></td><td>${s.id}</td><td>${classLabel(s.classId)}</td><td>${s.roll}</td><td>${p?esc(p.name):'—'}</td><td>${attPct(s.id)}%</td><td>${bal===0?pill('Paid','pill-green'):pill(PKR(bal),'pill-amber')}</td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="viewStudent('${s.id}')">View</button> <button class="btn btn-ghost btn-sm" onclick="studentForm('${s.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">Delete</button></td></tr>`; };
+ const isAdmin=currentUser().role==='admin';
+ const renderRow=s=>{ const p=parentById(s.parentId); const bal=feeBalance(s.id); return `<tr><td><b>${esc(s.name)}</b><br><small>${esc(s.admissionNo)}</small></td><td>${s.id}</td><td>${classLabel(s.classId)}</td><td>${s.roll}</td><td>${p?esc(p.name):'—'}</td><td>${attPct(s.id)}%</td><td>${bal===0?pill('Paid','pill-green'):pill(PKR(bal),'pill-amber')}</td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="viewStudent('${s.id}')">View</button>${isAdmin?` <button class="btn btn-ghost btn-sm" onclick="studentForm('${s.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">Delete</button>`:' <span class="muted" title="Only admin can change student data">🔒</span>'}</td></tr>`; };
  let q='',page=1;
  const apply=()=>{ let f=DB.students.filter(s=>(!cls||s.classId===cls)&&(!q||JSON.stringify(s).toLowerCase().includes(q.toLowerCase()))); const pg=paginate(f,page,10); $('#tbl-body').innerHTML=pg.rows.length?pg.rows.map(renderRow).join(''):`<tr><td colspan="8">${emptyState('🧑‍🎓','No students found. Try a different search or add a student.')}</td></tr>`; $('#tbl-pager').innerHTML=`Showing ${pg.rows.length} of ${pg.total} • Page ${pg.page}/${pg.pages} <button class="btn btn-ghost btn-sm" onclick="window.__sp(-1)">← Prev</button><button class="btn btn-ghost btn-sm" onclick="window.__sp(1)">Next →</button>`; window.__sp=d=>{page=Math.min(pg.pages,Math.max(1,page+d));apply();}; };
  window.__applyS=apply; $('#tbl-q').oninput=e=>{q=e.target.value;page=1;apply();}; apply();
 }
 function exportStudents(){ exportCSV('students.csv',[['ID','Name','Class','Roll','Parent','Attendance %','Fee balance PKR'],...DB.students.map(s=>[s.id,s.name,classLabel(s.classId),s.roll,(parentById(s.parentId)||{}).name||'',attPct(s.id),feeBalance(s.id)])]); }
 function studentForm(id){
+ if(currentUser().role!=='admin'){ toast('Only admin can add or edit student data.','err'); return; }
  const s=id?studentById(id):null;
  openModal(s?'Edit student':'Add student',`<form id="sf" class="form-grid">
   <div class="field"><label>Full name *</label><input name="name" required value="${esc(s?.name||'')}"></div>
@@ -333,11 +413,11 @@ function studentForm(id){
    else { const ns={id:uid('S'),admissionNo:'AN-2026-'+Math.floor(100+Math.random()*800),name,classId:f.get('classId'),roll:+f.get('roll')||1,gender:f.get('gender'),dob:f.get('dob')||'2015-01-01',blood:f.get('blood')||'',phone:f.get('phone')||'',address:f.get('address')||'',parentId:f.get('parentId'),status:'Active',admissionDate:todayStr(),medical:''}; DB.students.push(ns); DB.fees.push({id:'INV-'+Math.floor(3000+Math.random()*6000),studentId:ns.id,month:'November 2026',amount:8000,paid:0,due:'2026-11-10',discount:0,status:'Pending'}); audit('Added student '+name); }
    save(); toast('Student saved ✅'); render(); }}]);
 }
-function deleteStudent(id){ const s=studentById(id); confirmDlg(`Delete ${s.name}? Their attendance, marks and fee records will also be removed. This cannot be undone.`,()=>{ DB.students=DB.students.filter(x=>x.id!==id); DB.attendance=DB.attendance.filter(a=>a.studentId!==id); DB.marks=DB.marks.filter(m=>m.studentId!==id); DB.fees=DB.fees.filter(f=>f.studentId!==id); save(); toast('Student deleted.'); render(); }); }
+function deleteStudent(id){ if(currentUser().role!=='admin'){ toast('Only admin can delete students.','err'); return; } const s=studentById(id); confirmDlg(`Delete ${s.name}? Their attendance, marks and fee records will also be removed. This cannot be undone.`,()=>{ DB.students=DB.students.filter(x=>x.id!==id); DB.attendance=DB.attendance.filter(a=>a.studentId!==id); DB.marks=DB.marks.filter(m=>m.studentId!==id); DB.fees=DB.fees.filter(f=>f.studentId!==id); save(); toast('Student deleted.'); render(); }); }
 function viewStudent(id){
  const s=studentById(id); if(!s) return; const p=parentById(s.parentId); const avg=studentAvg(id);
  const rows=DB.marks.filter(m=>m.studentId===id);
- openModal(s.name,`<div class="kv"><dt>Student ID</dt><dd>${s.id} • ${esc(s.admissionNo)}</dd><dt>Class</dt><dd>${classLabel(s.classId)} • Roll ${s.roll}</dd><dt>Date of birth</dt><dd>${fmtDate(s.dob)} • ${esc(s.blood||'')}</dd><dt>Parent</dt><dd>${p?esc(p.name)+' • '+esc(p.phone):'—'}</dd><dt>Address</dt><dd>${esc(s.address)}</dd><dt>Attendance</dt><dd>${attPct(id)}% this term</dd><dt>Midterm average</dt><dd>${avg===null?'—':avg+'% ('+GRADE(avg)+')'}</dd><dt>Fee balance</dt><dd>${PKR(feeBalance(id))}</dd></div>
+ openModal(s.name,`<div class="kv"><dt>Student ID</dt><dd>${s.id} • ${esc(s.admissionNo)}</dd><dt>Class</dt><dd>${classLabel(s.classId)} • Roll ${s.roll}</dd><dt>Date of birth</dt><dd>${fmtDate(s.dob)} • ${esc(s.blood||'')} • ${esc(s.gender||'')}</dd><dt>Nationality</dt><dd>${esc(s.nationality||'—')} • ${esc(s.city||'')}</dd><dt>Guardian</dt><dd>${esc(s.guardianName||(p?p.name:''))} • ${esc(p?p.phone:'')}</dd><dt>Emergency contact</dt><dd>${esc(s.emergencyContact||'—')}</dd><dt>Address</dt><dd>${esc(s.address)}</dd><dt>Previous school</dt><dd>${esc(s.prevSchool||'—')}</dd><dt>Admission date</dt><dd>${fmtDate(s.admissionDate)}</dd><dt>Documents supplied</dt><dd>${(s.documents||[]).map(esc).join(', ')||'—'}</dd><dt>Attendance</dt><dd>${attPct(id)}% this term</dd><dt>Overall average</dt><dd>${avg===null?'—':avg+'% ('+GRADE(avg)+')'}</dd><dt>Fee balance</dt><dd>${PKR(feeBalance(id))}</dd></div>
  <h3 style="margin-top:16px">📋 Midterm marks</h3>${rows.length?`<div class="table-wrap"><table><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr>${rows.map(m=>`<tr><td>${esc(m.subject)}</td><td>${m.obtained}/${m.total}</td><td>${pill(GRADE(m.obtained/m.total*100),gradePill(GRADE(m.obtained/m.total*100)))}</td></tr>`).join('')}</table></div>`:emptyState('📋','No marks recorded yet.')}
  <p style="margin-top:12px"><b>Medical:</b> ${esc(s.medical||'None recorded.')}</p>`,
  [{label:'Print ID card',cls:'btn-ghost',fn:()=>printIDCard(s)},{label:'Close',cls:'btn-primary'}]);
@@ -382,7 +462,19 @@ function addClass(){ openModal('Add class',`<form id="cf" class="form-grid"><div
 
 /* ---------------- Attendance ---------------- */
 let attClass='C5A', attDate=null, attDraft={};
+function viewMyAttendance(u){
+ const v=$('#view'); const kids=myStudents(); const sel=childSel||kids[0]?.id; const s=studentById(sel)||kids[0];
+ if(!s){ v.innerHTML=emptyState('✅','No attendance records yet.'); return; }
+ const months=attMonthly(s.id);
+ v.innerHTML=`${crumb('My Attendance')}<div class="page-head"><div><h1>Attendance — ${esc(s.name)}</h1><p>Monthly and overall attendance. You cannot change attendance — only your class teacher and admin can mark it.</p></div></div>
+ ${kids.length>1?`<div class="child-switch">${kids.map(k=>`<button class="${k.id===s.id?'active':''}" onclick="childSel='${k.id}';render()"><b>${esc(k.name)}</b><br><small>${classLabel(k.classId)}</small></button>`).join('')}</div>`:''}
+ ${lockNote('Read-only: attendance is marked by your teacher. Contact the class teacher if a day looks wrong.')}
+ <div class="grid g4" style="margin-bottom:16px">${statCard('✅','ic-green',attPct(s.id)+'%','Overall attendance','All recorded days')}${statCard('📅','ic-blue',months.length?months[0].pct+'%':'—','This month',months.length?months[0].month:'')}${statCard('❌','ic-red',months.reduce((a,m)=>a+m.absent,0),'Days absent','')}${statCard('⏰','ic-amber',months.reduce((a,m)=>a+m.late,0),'Days late','')}</div>
+ <div class="card"><h3><span class="ci">📅</span>Monthly breakdown</h3><div class="table-wrap"><table><tr><th>Month</th><th>Present</th><th>Absent</th><th>Late</th><th>Leave</th><th>Total days</th><th>Attendance</th></tr>${months.map(m=>`<tr><td><b>${esc(m.month)}</b></td><td>${m.present}</td><td>${m.absent}</td><td>${m.late}</td><td>${m.leave}</td><td>${m.total}</td><td><b>${m.pct}%</b></td></tr>`).join('')||`<tr><td colspan="7">${emptyState('✅','No attendance recorded yet.')}</td></tr>`}</table></div>
+ <p class="hint" style="margin-top:10px">Rule: 75% minimum attendance is required to sit exams.</p></div>`;
+}
 function viewAttendance(u){
+ if(u.role==='student'||u.role==='parent') return viewMyAttendance(u);
  const v=$('#view'); attDate=attDate||todayStr();
  const scoped=myClasses(); const cls=scoped.find(c=>c.id===attClass)||scoped[0]; attClass=cls?cls.id:'C5A';
  const list=DB.students.filter(s=>s.classId===attClass);
@@ -409,23 +501,48 @@ function viewTimetable(u){
 }
 
 /* ---------------- Exams & Results ---------------- */
-let exClass='C5A', exSubject='Mathematics';
+let exClass='C5A', exSubject='Mathematics', exExam='EX01', exCat='All';
 function viewExams(u){
- const v=$('#view'); const scoped=myClasses(); const cls=scoped.find(c=>c.id===exClass)||scoped[0]; exClass=cls?cls.id:'C5A';
+ const v=$('#view');
+ if(u.role==='student'||u.role==='parent') return viewMyResults(u);
+ const scoped=myClasses(); const cls=scoped.find(c=>c.id===exClass)||scoped[0]; exClass=cls?cls.id:'C5A';
  const list=DB.students.filter(s=>s.classId===exClass);
  const canEdit=u.role==='admin'||u.role==='teacher';
- v.innerHTML=`${crumb('Examinations & Results')}<div class="page-head"><div><h1>Midterm Examination 2026</h1><p>Enter marks quickly — grades are calculated automatically (A+ ≥90, A ≥80, B ≥70, C ≥60, D ≥50, E ≥40, F below 40).</p></div><div class="quick-actions"><button class="btn btn-ghost" onclick="showReportCard('${list[0]?.id||''}')">🖨️ Sample report card</button></div></div>
- <div class="toolbar"><select onchange="exClass=this.value;render()">${scoped.map(c=>`<option value="${c.id}" ${c.id===exClass?'selected':''}>${c.name}-${c.section}</option>`).join('')}</select>
- <select onchange="exSubject=this.value;render()">${DB.subjects.slice(0,6).map(s=>`<option ${s.name===exSubject?'selected':''}>${s.name}</option>`).join('')}</select>
+ const exam=examById(exExam)||DB.exams[0]; exExam=exam.id;
+ v.innerHTML=`${crumb('Examinations & Results')}<div class="page-head"><div><h1>${esc(exam.name)}</h1><p>Category: ${pill(exam.category,'pill-purple')} • ${fmtDate(exam.start)} – ${fmtDate(exam.end)} • Grades are automatic (A+ ≥90, A ≥80, B ≥70, C ≥60, D ≥50, E ≥40, F below 40).</p></div><div class="quick-actions"><button class="btn btn-ghost" onclick="printResultSheet()">🖨️ Print result sheet</button><button class="btn btn-primary" onclick="uploadResultSheet()">⬆ Upload result sheet</button></div></div>
+ ${u.role==='teacher'?lockNote('You can enter marks and upload result sheets for your own section only ('+classLabel(exClass)+'). Student profiles and fees are admin-only.'):''}
+ <div class="toolbar"><select onchange="exExam=this.value;render()">${DB.exams.map(e=>`<option value="${e.id}" ${e.id===exExam?'selected':''}>${esc(e.name)} — ${esc(e.category)}</option>`).join('')}</select>
+ <select onchange="exClass=this.value;render()">${scoped.map(c=>`<option value="${c.id}" ${c.id===exClass?'selected':''}>${c.name}-${c.section}</option>`).join('')}</select>
+ <select onchange="exSubject=this.value;render()">${DB.subjects.slice(0,6).map(su=>`<option ${su.name===exSubject?'selected':''}>${su.name}</option>`).join('')}</select>
  <span class="spacer"></span>${canEdit?`<button class="btn btn-primary" onclick="saveMarks()">💾 Save marks</button>`:''}</div>
- <div class="table-wrap"><table><tr><th>Student</th><th>Marks / 100</th><th>Grade</th><th>Class average</th></tr>${list.map(s=>{ const m=DB.marks.find(x=>x.studentId===s.id&&x.subject===exSubject&&x.examId==='EX01'); return `<tr><td><b>${esc(s.name)}</b> <small>Roll ${s.roll}</small></td><td>${canEdit?`<input type="number" min="0" max="100" value="${m?.obtained??''}" data-marks="${s.id}" style="max-width:110px;background:#fff">`:(m?m.obtained+'/100':'—')}</td><td>${m?pill(GRADE(m.obtained),gradePill(GRADE(m.obtained))):'—'}</td><td>${studentAvg(s.id)===null?'—':studentAvg(s.id)+'%'}</td></tr>`; }).join('')}</table></div>
+ <div class="table-wrap"><table><tr><th>Student</th><th>Marks</th><th>Grade</th><th>Average (all tests)</th></tr>${list.map(s=>{ const m=DB.marks.find(x=>x.studentId===s.id&&x.subject===exSubject&&x.examId===exExam); const tot=exam.total||100; return `<tr><td><b>${esc(s.name)}</b> <small>Roll ${s.roll}</small></td><td>${canEdit?`<input type="number" min="0" max="${tot}" value="${m?.obtained??''}" data-marks="${s.id}" style="max-width:110px;background:#fff">`:(m?m.obtained+'/'+m.total:'—')}</td><td>${m?pill(GRADE(m.obtained/m.total*100),gradePill(GRADE(m.obtained/m.total*100))):'—'}</td><td>${studentAvg(s.id)===null?'—':studentAvg(s.id)+'%'}</td></tr>`; }).join('')}</table></div>
  ${list.length?'':emptyState('📋','No students in this class.')}
  <div class="grid g2" style="margin-top:16px"><section class="card"><h3><span class="ci">🏆</span>Top performers — ${classLabel(exClass)}</h3>${[...list].sort((a,b)=>(studentAvg(b.id)||0)-(studentAvg(a.id)||0)).slice(0,3).map((s,i)=>`<p>${['🥇','🥈','🥉'][i]} <b>${esc(s.name)}</b> — ${studentAvg(s.id)}% average</p>`).join('')}</section>
- <section class="card tint-grey"><h3><span class="ci">📊</span>Subject averages</h3>${['Mathematics','English','Science','Urdu'].map(sub=>{ const ms=DB.marks.filter(m=>m.subject===sub); const avg=ms.length?Math.round(ms.reduce((a,m)=>a+m.obtained,0)/ms.length):0; return barRow(sub,avg,avg+'%'); }).join('')}</section></div>`;
+ <section class="card"><h3><span class="ci">📄</span>Result sheets — ${classLabel(exClass)}</h3>${(DB.resultSheets||[]).filter(r=>r.classId===exClass).map(r=>`<p><b>${esc(r.file)}</b> — ${esc((examById(r.examId)||{}).name||'')} • by ${esc(r.by)} • ${fmtDate(r.date)}</p>`).join('')||emptyState('📄','No result sheet uploaded yet for this section.')}
+ <p class="hint">Result sheets you upload are saved and visible to admin. Students and parents see the marks in their own portals.</p></section></div>`;
 }
-function saveMarks(){ let n=0; $$('[data-marks]').forEach(inp=>{ const sid=inp.dataset.marks; const val=+inp.value; if(inp.value===''||isNaN(val)) return; const ex=DB.marks.find(m=>m.studentId===sid&&m.subject===exSubject&&m.examId==='EX01'); if(ex) ex.obtained=Math.min(100,Math.max(0,val)); else DB.marks.push({examId:'EX01',studentId:sid,subject:exSubject,obtained:Math.min(100,Math.max(0,val)),total:100}); n++; }); save(); toast(n+' mark(s) saved ✅'); render(); }
-function showReportCard(sid){ const s=studentById(sid); if(!s){ toast('No student selected.','err'); return; } const rows=DB.marks.filter(m=>m.studentId===sid); const avg=studentAvg(sid);
- printSection(`<h1>${esc(DB.school.name)}</h1><p>Report Card — Midterm Examination 2026</p><p><b>${esc(s.name)}</b> • ${classLabel(s.classId)} • Roll ${s.roll} • ${esc(s.admissionNo)}</p><table><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr>${rows.map(m=>`<tr><td>${esc(m.subject)}</td><td>${m.obtained}/${m.total}</td><td>${GRADE(m.obtained/m.total*100)}</td></tr>`).join('')}</table><p><b>Average: ${avg}% — Grade ${GRADE(avg||0)}</b> • Attendance: ${attPct(sid)}%</p><p>Class Teacher: ________________ &nbsp; Principal: ________________</p>`,'Report Card — '+s.name); }
+function viewMyResults(u){
+ const v=$('#view'); const kids=myStudents(); const sel=childSel||kids[0]?.id; const s=studentById(sel)||kids[0];
+ if(!s){ v.innerHTML=emptyState('📋','No results yet.'); return; }
+ const cat=exCat||'All';
+ const rows=DB.marks.filter(m=>m.studentId===s.id&&(cat==='All'||examCatOf(m.examId)===cat));
+ v.innerHTML=`${crumb('Exams & Results')}<div class="page-head"><div><h1>Results — ${esc(s.name)}</h1><p>Every test is shown with its category: Weekly, Monthly, Midterm, Final or Quiz. Read-only — marks are entered by your teacher.</p></div><div class="quick-actions"><button class="btn btn-primary" onclick="showReportCard('${s.id}')">🖨️ Print report card</button></div></div>
+ ${kids.length>1?`<div class="child-switch">${kids.map(k=>`<button class="${k.id===s.id?'active':''}" onclick="childSel='${k.id}';render()"><b>${esc(k.name)}</b><br><small>${classLabel(k.classId)}</small></button>`).join('')}</div>`:''}
+ <div class="tabs">${['All',...EXAM_CATS].map(c=>`<button class="${cat===c?'active':''}" onclick="exCat='${c}';render()">${c}</button>`).join('')}</div>
+ <div class="grid g4" style="margin-bottom:16px">${['Weekly Test','Monthly Test','Midterm Exam','Quiz'].map(c=>{ const a=studentAvg(s.id,c); return statCard('📝','ic-purple',a===null?'—':a+'%',c,''); }).join('')}</div>
+ <div class="card"><h3><span class="ci">📋</span>Results ${cat==='All'?'— all categories':'— '+cat}</h3><div class="table-wrap"><table><tr><th>Test / Exam</th><th>Category</th><th>Subject</th><th>Marks</th><th>Grade</th></tr>${rows.map(m=>{ const e=examById(m.examId); return `<tr><td><b>${esc(e?.name||'')}</b></td><td>${pill(examCatOf(m.examId),'pill-purple')}</td><td>${esc(m.subject)}</td><td>${m.obtained}/${m.total}</td><td>${pill(GRADE(m.obtained/m.total*100),gradePill(GRADE(m.obtained/m.total*100)))}</td></tr>`; }).join('')||`<tr><td colspan="5">${emptyState('📋','No results in this category yet.')}</td></tr>`}</table></div></div>`;
+}
+function uploadResultSheet(){ const u=currentUser(); const exam=examById(exExam)||DB.exams[0];
+ openModal('Upload result sheet',`<p><b>${esc(exam.name)}</b> • ${classLabel(exClass)} • by ${esc(u.name)}</p>
+ <div class="field"><label>Result sheet file name *</label><input id="rs-file" placeholder="e.g. class5a-midterm-maths.pdf"></div>
+ <div class="field"><label>Note (optional)</label><input id="rs-note" placeholder="e.g. Checked and verified"></div>
+ <p class="hint">In this demo the sheet is recorded by file name and the marks table is saved. Real file storage needs secure upload — see docs/BACKEND.md.</p>`,
+ [{label:'Cancel',cls:'btn-ghost'},{label:'Save result sheet',cls:'btn-primary',fn:()=>{ const f=($('#rs-file')?.value||'').trim(); if(!f){ toast('Enter the result sheet file name.','err'); return false; } DB.resultSheets.unshift({id:uid('RS'),examId:exam.id,classId:exClass,teacherId:u.teacherId||null,file:f,note:$('#rs-note')?.value||'',by:u.name,date:todayStr()}); save(); audit('Result sheet uploaded for '+classLabel(exClass)+' ('+exam.name+')'); toast('Result sheet saved ✅'); render(); }}]); }
+function printResultSheet(){ const exam=examById(exExam)||DB.exams[0]; const list=DB.students.filter(s=>s.classId===exClass);
+ printSection(`<h1>${esc(DB.school.name)}</h1><p>Result Sheet — ${esc(exam.name)} (${esc(exam.category)}) • ${classLabel(exClass)} • ${esc(exSubject)}</p><table><tr><th>Student</th><th>Roll</th><th>Marks</th><th>Grade</th></tr>${list.map(s=>{ const m=DB.marks.find(x=>x.studentId===s.id&&x.subject===exSubject&&x.examId===exExam); return `<tr><td>${esc(s.name)}</td><td>${s.roll}</td><td>${m?m.obtained+'/'+m.total:'—'}</td><td>${m?GRADE(m.obtained/m.total*100):'—'}</td></tr>`; }).join('')}</table><p>Class Teacher: ________________ &nbsp; Principal: ________________</p>`,'Result Sheet — '+exam.name); }
+function saveMarks(){ let n=0; $$('[data-marks]').forEach(inp=>{ const sid=inp.dataset.marks; const val=+inp.value; if(inp.value===''||isNaN(val)) return; const ex=DB.marks.find(m=>m.studentId===sid&&m.subject===exSubject&&m.examId===exExam); const tot=(examById(exExam)||{}).total||100; if(ex) ex.obtained=Math.min(tot,Math.max(0,val)); else DB.marks.push({examId:exExam,studentId:sid,subject:exSubject,obtained:Math.min(tot,Math.max(0,val)),total:tot}); n++; }); save(); toast(n+' mark(s) saved ✅'); render(); }
+function showReportCard(sid,examId){ const s=studentById(sid); if(!s){ toast('No student selected.','err'); return; } const ex=examById(examId)||examById('EX01'); const rows=DB.marks.filter(m=>m.studentId===sid&&(!examId||m.examId===examId)); const avg=rows.length?Math.round(rows.reduce((a,m)=>a+m.obtained/m.total*100,0)/rows.length):null;
+ printSection(`<h1>${esc(DB.school.name)}</h1><p>Report Card — ${esc(ex.name)} (${esc(ex.category)})</p><p><b>${esc(s.name)}</b> • ${classLabel(s.classId)} • Roll ${s.roll} • ${esc(s.admissionNo)}</p><table><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr>${rows.map(m=>`<tr><td>${esc(m.subject)}</td><td>${m.obtained}/${m.total}</td><td>${GRADE(m.obtained/m.total*100)}</td></tr>`).join('')}</table><p><b>Average: ${avg===null?'—':avg+'% — Grade '+GRADE(avg)}</b> • Attendance: ${attPct(sid)}%</p><p>Class Teacher: ________________ &nbsp; Principal: ________________</p>`,'Report Card — '+s.name); }
 
 /* ---------------- Fees & Finance ---------------- */
 function viewFees(u){
@@ -433,6 +550,7 @@ function viewFees(u){
  let list=DB.fees; if(kids) list=list.filter(f=>kids.some(k=>k.id===f.studentId));
  const total=list.reduce((a,f)=>a+f.amount,0), paid=list.reduce((a,f)=>a+f.paid,0), out=list.reduce((a,f)=>a+(f.amount-f.paid-(f.discount||0)),0);
  v.innerHTML=`${crumb('Fees & Finance')}<div class="page-head"><div><h1>Fees &amp; finance</h1><p>Every payment gets a unique receipt number. Currency: PKR.</p></div>${u.role==='admin'?`<button class="btn btn-primary" onclick="recordPayment()">💰 Record payment — 3 clicks</button>`:''}</div>
+ ${u.role!=='admin'?lockNote('Read-only: only admin can record payments or change fees.'):''}
  <div class="grid g4" style="margin-bottom:16px">${statCard('💰','ic-blue',PKR(total),'Total billed','November 2026')}${statCard('✅','ic-green',PKR(paid),'Collected','')}${statCard('⏰','ic-amber',PKR(out),'Outstanding',DB.fees.filter(f=>f.status==='Overdue').length+' overdue')}${statCard('🧾','ic-purple',DB.payments.length,'Receipts issued','Unique receipt numbers')}</div>
  <div class="grid g2"><section class="card"><h3><span class="ci">🧾</span>Fee structure</h3>${DB.feeStructure.map(f=>`<p><b>${esc(f.cls)}</b> — ${PKR(f.monthly)}/month • Admission ${PKR(f.admission)}</p>`).join('')}<p class="muted">Discounts: sibling 10%, scholarship on merit, staff children 20%. Late fine: PKR 500 after the 10th.</p></section>
  <section class="card"><h3><span class="ci">💳</span>Payment methods</h3><p>Cash, bank transfer, JazzCash, EasyPaisa (integration-ready). Card / online gateway: <b>requires configuration</b> — no card details are stored in this demo.</p></section></div>
@@ -506,7 +624,18 @@ function viewCommunication(){
  <section class="card"><h3><span class="ci">💬</span>Messages</h3>${DB.messages.map(m=>`<p><b>${esc(m.subject)}</b><br><small>From ${esc(m.from)} → ${esc(m.to)} • ${fmtDate(m.date)}</small><br>${esc(m.body)}</p>`).join('')}<button class="btn btn-ghost" onclick="go('messages')">Open messages →</button></section></div>
  <p class="hint">Email, SMS and WhatsApp delivery are integration-ready — they need provider credentials in Settings. In-app announcements and messages work now.</p>`;
 }
-function announcementForm(){ openModal('New announcement',`<form id="anf" class="form-grid"><div class="field full"><label>Title *</label><input name="title" required></div><div class="field"><label>Audience</label><select name="audience"><option>All</option><option>Parents</option><option>Teachers</option><option>Students</option></select></div><div class="field full"><label>Message</label><textarea name="body" rows="3" required></textarea></div></form>`,[{label:'Cancel',cls:'btn-ghost'},{label:'Publish announcement',cls:'btn-primary',fn:()=>{ const f=new FormData($('#anf')); DB.announcements.unshift({id:uid('AN'),title:f.get('title'),body:f.get('body'),date:todayStr(),audience:f.get('audience'),pinned:false}); save(); toast('Announcement published ✅'); render(); }}]); }
+function announcementForm(){ const u=currentUser();
+ if(u.role==='teacher'){ teacherAnnouncementForm(); return; }
+ openModal('New announcement',`<form id="anf" class="form-grid"><div class="field full"><label>Title *</label><input name="title" required></div><div class="field"><label>Audience</label><select name="audience"><option>All</option><option>Parents</option><option>Teachers</option><option>Students</option></select></div><div class="field full"><label>Message</label><textarea name="body" rows="3" required></textarea></div></form>`,[{label:'Cancel',cls:'btn-ghost'},{label:'Publish announcement',cls:'btn-primary',fn:()=>{ const f=new FormData($('#anf')); DB.announcements.unshift({id:uid('AN'),title:f.get('title'),body:f.get('body'),date:todayStr(),audience:f.get('audience'),classId:null,pinned:false,by:u.name}); save(); toast('Announcement published ✅'); render(); }}]); }
+function viewTeacherAnnouncements(u){
+ const v=$('#view'); const scoped=myClasses(); const list=announcementsFor(u);
+ v.innerHTML=`${crumb('Announcements')}<div class="page-head"><div><h1>Announcements</h1><p>Announcements for your section — visible to your section's students and parents.</p></div><button class="btn btn-primary" onclick="teacherAnnouncementForm()">📢 New section announcement</button></div>
+ ${lockNote('You can post announcements for your own section(s) only: '+scoped.map(classLabel).join(', ')+'. School-wide announcements are admin-only.')}
+ <div class="grid g2">${list.map(a=>`<article class="card"><h3><span class="ci">📢</span>${esc(a.title)}</h3><p>${esc(a.body)}</p><p><small>${fmtDate(a.date)} • ${esc(a.audience)}${a.by?' • by '+esc(a.by):''}</small></p></article>`).join('')||emptyState('📢','No announcements yet.')}</div>`;
+}
+function teacherAnnouncementForm(){ const u=currentUser(); const scoped=myClasses();
+ openModal('New section announcement',`<form id="taf" class="form-grid"><div class="field full"><label>Title *</label><input name="title" required></div><div class="field"><label>Section *</label><select name="classId">${scoped.map(c=>`<option value="${c.id}">${c.name}-${c.section}</option>`).join('')}</select></div><div class="field full"><label>Message *</label><textarea name="body" rows="3" required></textarea></div></form>`,
+ [{label:'Cancel',cls:'btn-ghost'},{label:'Publish to section',cls:'btn-primary',fn:()=>{ const f=new FormData($('#taf')); const title=(f.get('title')||'').toString().trim(); if(!title){toast('Title is required.' ,'err');return false;} const cid=f.get('classId'); if(!scoped.some(c=>c.id===cid)){ toast('You can only announce to your own section.','err'); return false; } DB.announcements.unshift({id:uid('AN'),title,body:f.get('body'),date:todayStr(),audience:classLabel(cid),classId:cid,pinned:false,by:u.name}); save(); audit('Announcement published for '+classLabel(cid)); toast('Announcement published to '+classLabel(cid)+' ✅'); render(); }}]); }
 function viewEvents(){
  const v=$('#view');
  v.innerHTML=`${crumb('Events & Calendar')}<div class="page-head"><div><h1>Events &amp; calendar</h1><p>School events, holidays and meetings for ${esc(DB.school.academicYear)}.</p></div><button class="btn btn-primary" onclick="eventForm()">＋ Add event</button></div>
@@ -558,7 +687,7 @@ function viewProgress(u){
  v.innerHTML=`${crumb('Student Progress')}<div class="page-head"><div><h1>Student progress</h1><p>Attendance, marks and homework in one place.</p></div></div>
  ${kids.length>1?`<div class="child-switch">${kids.map(k=>`<button class="${s&&k.id===s.id?'active':''}" onclick="go('progress','${k.id}')"><b>${esc(k.name)}</b><br><small>${classLabel(k.classId)}</small></button>`).join('')}</div>`:''}
  ${s?`<div class="grid g4" style="margin-bottom:16px">${statCard('✅','ic-green',attPct(s.id)+'%','Attendance','')}${statCard('📋','ic-purple',(studentAvg(s.id)??'—')+'%','Midterm average','')}${statCard('📚','ic-blue',DB.homework.filter(h=>h.classId===s.classId).length,'Homework tasks','')}${statCard('💰','ic-amber',PKR(feeBalance(s.id)),'Fee balance','')}</div>
- <div class="card"><h3><span class="ci">📋</span>Midterm marks — ${esc(s.name)}</h3><div class="table-wrap"><table><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr>${DB.marks.filter(m=>m.studentId===s.id).map(m=>`<tr><td>${esc(m.subject)}</td><td>${m.obtained}/${m.total}</td><td>${pill(GRADE(m.obtained/m.total*100),gradePill(GRADE(m.obtained/m.total*100)))}</td></tr>`).join('')}</table></div><div class="quick-actions" style="margin-top:14px"><button class="btn btn-primary" onclick="showReportCard('${s.id}')">🖨️ Print report card</button></div></div>` : emptyState('🧑‍🎓','No student selected.')}`;
+ <div class="card"><h3><span class="ci">📋</span>Marks — ${esc(s.name)}</h3><div class="tabs">${['All',...EXAM_CATS].map(c=>`<button class="${(exCat||'All')===c?'active':''}" onclick="exCat='${c}';render()">${c}</button>`).join('')}</div><div class="table-wrap"><table><tr><th>Test / Exam</th><th>Category</th><th>Subject</th><th>Marks</th><th>Grade</th></tr>${DB.marks.filter(m=>m.studentId===s.id&&((exCat||'All')==='All'||examCatOf(m.examId)===exCat)).map(m=>{ const e=examById(m.examId); return `<tr><td><b>${esc(e?.name||'')}</b></td><td>${pill(examCatOf(m.examId),'pill-purple')}</td><td>${esc(m.subject)}</td><td>${m.obtained}/${m.total}</td><td>${pill(GRADE(m.obtained/m.total*100),gradePill(GRADE(m.obtained/m.total*100)))}</td></tr>`; }).join('')}</table></div><p style="margin-top:10px">${['Weekly Test','Monthly Test','Midterm Exam'].map(c=>{ const a=studentAvg(s.id,c); return `<b>${c}:</b> ${a===null?'—':a+'%'} &nbsp;`; }).join('')}</p><div class="quick-actions" style="margin-top:14px"><button class="btn btn-primary" onclick="showReportCard('${s.id}')">🖨️ Print report card</button></div></div>` : emptyState('🧑‍🎓','No student selected.')}`;
 }
 function viewMessages(u){
  const v=$('#view');
@@ -576,8 +705,11 @@ function leaveForm(){ openModal('Apply for leave',`<form id="lvf" class="form-gr
 function viewProfile(u){
  const v=$('#view');
  const extra=u.role==='student'?studentById(u.studentId):u.role==='teacher'?teacherById(u.teacherId):u.role==='parent'?parentById(u.parentId):null;
+ const stu=u.role==='student'?extra:null; const par=stu?parentById(stu.parentId):null;
  v.innerHTML=`${crumb('Profile')}<div class="page-head"><div><h1>${esc(u.name)}</h1><p>${esc(u.title||u.role)} • ${esc(u.email)}</p></div></div>
+ ${stu?lockNote('Read-only: this is the information you supplied to the school. To change it, ask the admin office.'):''}
  <div class="grid g2"><section class="card"><h3><span class="ci">👤</span>Profile</h3><div class="kv"><dt>Name</dt><dd>${esc(u.name)}</dd><dt>Email</dt><dd>${esc(u.email)}</dd><dt>Role</dt><dd>${esc(u.role)}</dd>${extra&&extra.phone?`<dt>Phone</dt><dd>${esc(extra.phone)}</dd>`:''}${extra&&extra.classId?`<dt>Class</dt><dd>${classLabel(extra.classId)} • Roll ${extra.roll}</dd>`:''}${extra&&extra.subject?`<dt>Subject</dt><dd>${esc(extra.subject)}</dd>`:''}</div></section>
+ ${stu?`<section class="card"><h3><span class="ci">🧑‍🎓</span>My full school record</h3><div class="kv"><dt>Student ID</dt><dd>${stu.id} • ${esc(stu.admissionNo)}</dd><dt>Date of birth</dt><dd>${fmtDate(stu.dob)}</dd><dt>Gender / Blood</dt><dd>${esc(stu.gender||'—')} • ${esc(stu.blood||'—')}</dd><dt>Nationality / City</dt><dd>${esc(stu.nationality||'—')} • ${esc(stu.city||'')}</dd><dt>Guardian</dt><dd>${esc(stu.guardianName||(par?par.name:''))} • ${esc(par?par.phone:'')}</dd><dt>Emergency contact</dt><dd>${esc(stu.emergencyContact||'—')}</dd><dt>Address</dt><dd>${esc(stu.address)}</dd><dt>Previous school</dt><dd>${esc(stu.prevSchool||'—')}</dd><dt>Admission date</dt><dd>${fmtDate(stu.admissionDate)}</dd><dt>Documents supplied</dt><dd>${(stu.documents||[]).map(esc).join(', ')||'—'}</dd><dt>Medical</dt><dd>${esc(stu.medical||'None recorded.')}</dd><dt>Attendance</dt><dd>${attPct(stu.id)}% overall</dd><dt>Fee balance</dt><dd>${PKR(feeBalance(stu.id))}</dd></div></section>`:''}
  <section class="card"><h3><span class="ci">🔐</span>Account</h3><p>Change password, notification preferences and language.</p><div class="quick-actions"><button class="btn btn-ghost" onclick="openModal('Change password','<div class=field><label>New password</label><input type=password id=npw></div>',[{label:'Cancel',cls:'btn-ghost'},{label:'Save',cls:'btn-primary',fn:()=>{ const p=$('#npw').value; if(p.length<6){toast('Password must be at least 6 characters.' ,'err');return false;} u.password=p; save(); toast('Password changed ✅'); }}])">Change password</button><button class="btn btn-ghost" onclick="setLang(LANG==='en'?'ur':'en')">🌐 ${LANG==='en'?'Switch to اردو':'Switch to English'}</button><button class="btn btn-ghost" onclick="toggleTheme();render()">🌙 Toggle dark mode</button></div><p class="hint" style="margin-top:12px">Two-factor authentication and login-activity alerts are part of the production backend plan (docs/BACKEND.md) — not active in this local demo.</p></section></div>`;
 }
 function viewChildren(u){
