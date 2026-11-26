@@ -15,7 +15,9 @@ python3 -m http.server 8000
 
 Works from GitHub Pages / any static host: push the contents of this folder to a repo, enable Pages (branch `main`, folder `/ (root)`).
 
-## Demo logins (development only)
+## How to sign in — 4 portal cards
+
+The first screen shows four portal cards — **Admin**, **Teacher**, **Student**, **Parent**. Tap a card, then sign in with that portal's email and password (with **Remember me**, **Show password** and **Forgot password** — the demo explains that reset needs email configured, it never fakes a reset). Each portal has a one-click demo login. After sign-in you stay in that portal only; log out to switch portals. A wrong email/password is rejected, and an account opened in the wrong portal is refused with a clear message.
 
 | Portal | Email | Password |
 |---|---|---|
@@ -24,7 +26,23 @@ Works from GitHub Pages / any static host: push the contents of this folder to a
 | Student (Ahmed Ali, Class 5-A) | ahmed@school.pk | student123 |
 | Parent (Bilal Ahmed — father of Ahmed & Sara) | bilal@school.pk | parent123 |
 
-Or use the one-click demo cards on the login screen. Demo passwords are **not** production security — see `docs/BACKEND.md`.
+## Permissions — who can do what
+
+| Action | Admin | Teacher | Student | Parent |
+|---|---|---|---|---|
+| Add / edit / delete student data | ✅ Full | ❌ Locked ("Only admin can change this") | ❌ Read-only own record | ❌ Read-only linked children |
+| See students | All | Only own section(s)/classes | Only self | Only linked children |
+| Mark attendance | ✅ | ✅ Own section only | ❌ View monthly + overall | ❌ View monthly + overall |
+| Enter marks / upload result sheets | ✅ | ✅ Own section only | ❌ View results | ❌ View results |
+| Create announcements | ✅ School-wide | ✅ Own section only | ❌ View | ❌ View |
+| Fees — record payments / change fees | ✅ | ❌ | ❌ View own fees + receipts | ❌ View children's fees + receipts |
+| Users, settings, payroll | ✅ | ❌ | ❌ | ❌ |
+
+Permissions are enforced in the UI (locked actions are hidden or disabled with a note) and in the router — a student or parent can never reach an admin view by route name.
+
+## Exams & tests — categories
+
+Every test/exam has a category: **Weekly Test**, **Monthly Test**, **Midterm Exam**, **Final Exam**, **Quiz**. Results and report cards always show the category, and student/parent performance views filter by category with per-category averages. Demo data includes a Weekly Test (Maths, Week 3), a Monthly Test (November 2026), a Quiz (English Vocabulary) and the Midterm Examination 2026.
 
 ## What is built (and actually works)
 
@@ -36,7 +54,7 @@ Or use the one-click demo cards on the login screen. Demo passwords are **not** 
 - **Design:** premium SaaS look — dark navy `#0f2238` header/sidebar, purple `#6d28d9` → pink `#db2777` gradient primary buttons, orange `#f97316` used sparingly, background `#f6f7fb`, white rounded cards (18px radius, soft shadow, hover lift), small pretty typography (body 15px/1.6/400, headings only slightly bolder), max-width 1200px centred content, stacked form fields (bold dark label above a light `#f6f7fb` input, full-width gradient button on its own row), distinct icon at every card, mobile bottom nav, touch targets ≥44px.
 - **Fastest daily flows first:** dashboard quick actions — mark attendance, record a fee payment (3 clicks), enter marks, find any student in one search. Every table has search / filter / sort / pagination. Deletes ask for confirmation; every save shows success feedback; empty states are designed, not blank.
 - **Language:** English / اردو toggle with RTL support. Currency PKR. Classes Playgroup, Nursery, KG, 1–10. Light / dark mode.
-- **Data:** a single in-browser database in `localStorage` (`sms_db_v1`), seeded with realistic demo data: 1 school (Al-Noor Public School, Lahore), 8 classes, 10 subjects, 8 teachers, 24 students, 12 parents, 5 staff, a week of attendance, homework / assignments, a Midterm exam with marks, fee records, 20 books, 3 buses / routes, events and announcements. All CRUD persists after refresh. "Reset demo data" in the sidebar restores the seed.
+- **Data:** a single in-browser database in `localStorage` (`sms_db_v2` — v1 data is migrated automatically on first load), seeded with realistic demo data: 1 school (Al-Noor Public School, Lahore), 8 classes, 10 subjects, 8 teachers, 24 students, 12 parents, 5 staff, about 4 weeks of attendance (so monthly breakdowns are real), homework / assignments, exams in five categories (Weekly, Monthly, Midterm, Final, Quiz) with marks, fee records, 20 books, 3 buses / routes, events and announcements. All CRUD persists after refresh. "Reset demo data" in the sidebar restores the seed.
 
 ## Honest limits — what is NOT built
 

@@ -1,7 +1,13 @@
 # Production Backend Plan — School Management System
 
+## Current demo state (2026-11-25 update)
+- First screen: 4 portal cards (Admin / Teacher / Student / Parent) -> per-portal sign-in.
+- Permissions are enforced in the demo UI and router: admin full access; teachers scoped to their own section(s) (attendance, marks, result sheets, section announcements only); students/parents read-only on their own / linked children's data.
+- Exams are categorised: Weekly Test, Monthly Test, Midterm Exam, Final Exam, Quiz — every result carries its category.
+- Typography: Inter system font stack, no external font downloads.
+
 > **Status: plan only.** The app in this folder is client-side with `localStorage`
-> (`sms_db_v1`). No PostgreSQL server, API, or real authentication runs here.
+> (`sms_db_v2` — v1 data migrates automatically on first load). No PostgreSQL server, API, or real authentication runs here.
 > This document is the design for the production backend that would replace
 > the localStorage layer — it is **not** running code.
 
@@ -93,4 +99,4 @@ All endpoints: Zod validation, rate limiting, pagination (`?page&limit`),
 2. Import the demo seed into Postgres with a one-off Prisma seed script
    (same students / teachers / fees / marks).
 3. Turn off demo logins; create real accounts with hashed passwords and
-   per-branch roles. Remove `sms_db_v1` from production builds.
+   per-branch roles. Remove `sms_db_v2` from production builds.
